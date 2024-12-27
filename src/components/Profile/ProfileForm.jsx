@@ -105,7 +105,7 @@ const ProfileForm = () => {
         ],
       });
     }
-  }, [user]);
+  }, [formik, user]);
 
   return (
     <Container maxWidth="md">

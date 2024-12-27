@@ -1,11 +1,9 @@
-/* eslint-disable react/prop-types */
 import React from 'react';
 import {
   AppBar,
   Box,
   Toolbar,
   Typography,
-//   Button,
   Container,
   IconButton,
   Menu,

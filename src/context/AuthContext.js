@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
 
@@ -20,7 +19,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await api.get('/api/auth/me');
+      const response = await api.get('/auth/me');
       setUser(response.data);
     } catch (error) {
         console.log(error)

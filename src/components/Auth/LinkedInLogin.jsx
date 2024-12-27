@@ -1,10 +1,9 @@
-// import from 'react';
 import { Button, Container, Typography, Box } from '@mui/material';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 
 const LinkedInLogin = () => {
   const handleLinkedInLogin = () => {
-    // window.location.href = `${process.env.REACT_APP_API_URL}/api/auth/linkedin`;
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/linkedin`;
   };
 
   return (

@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []); // Ensure checkAuthStatus is declared before this effect
+  }, []); 
 
 
   const login = async (token, userData) => {
@@ -55,7 +55,6 @@ export const AuthProvider = ({ children }) => {
             console.log('Auth verification successful:', response.data);
         } catch (error) {
             console.error('Auth verification failed:', error);
-            // Don't throw here - we still want to complete the login
         }
         
     } catch (error) {

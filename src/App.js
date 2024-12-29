@@ -7,6 +7,7 @@ import ProfileForm from './components/Profile/ProfileForm';
 import ProfilePicture from './components/Profile/ProfilePicture';
 import IDUpload from './components/Verification/IDUpload';
 import VerificationStatus from './components/Verification/VerificationStatus';
+import CallbackHandler from './components/CallbackHandler';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LinkedInLogin />} />
+          <Route path="/auth/callback" element={<CallbackHandler />} />
           <Route
             path="/*"
             element={

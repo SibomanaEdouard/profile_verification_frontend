@@ -34,13 +34,22 @@ const IDUpload = () => {
 
     setLoading(true);
     try {
-      const response = await api.post('/api/verification/upload-id', formData);
+      const response = await api.post('/verify/national-id', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setMessage({ type: 'success', text: 'ID uploaded successfully' });
-      console.log(response)
+      console.log(response);
+      // Clear the file input after successful upload
+      setFile(null);
+      // Reset the file input
+      const fileInput = document.getElementById('id-upload');
+      if (fileInput) fileInput.value = '';
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Error uploading ID',
+        text: error.response?.data?.error || 'Error uploading ID',
       });
     } finally {
       setLoading(false);

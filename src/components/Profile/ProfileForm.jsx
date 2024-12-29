@@ -41,33 +41,37 @@ const validationSchema = Yup.object({
   ),
 });
 
+const getInitialValues = (user) => ({
+  name: user?.name || '',
+  email: user?.email || '',
+  education: user?.education || [
+    {
+      institution: '',
+      degree: '',
+      fieldOfStudy: '',
+      startDate: '',
+      endDate: '',
+    },
+  ],
+  workExperience: user?.workExperience || [
+    {
+      company: '',
+      position: '',
+      startDate: '',
+      endDate: '',
+    },
+  ],
+});
+
 const ProfileForm = () => {
   const { user } = useAuth();
   const [message, setMessage] = useState(null);
+  const [initialFormValues] = useState(() => getInitialValues(user));
 
   const formik = useFormik({
-    initialValues: {
-      name: '',
-      email: '',
-      education: [
-        {
-          institution: '',
-          degree: '',
-          fieldOfStudy: '',
-          startDate: '',
-          endDate: '',
-        },
-      ],
-      workExperience: [
-        {
-          company: '',
-          position: '',
-          startDate: '',
-          endDate: '',
-        },
-      ],
-    },
+    initialValues: initialFormValues,
     validationSchema,
+    enableReinitialize: false,
     onSubmit: async (values) => {
       try {
         await api.put('/api/profile', values);
@@ -81,31 +85,12 @@ const ProfileForm = () => {
     },
   });
 
+  // Only update form values once when user data becomes available
   useEffect(() => {
-    if (user) {
-      formik.setValues({
-        name: user.name || '',
-        email: user.email || '',
-        education: user.education || [
-          {
-            institution: '',
-            degree: '',
-            fieldOfStudy: '',
-            startDate: '',
-            endDate: '',
-          },
-        ],
-        workExperience: user.workExperience || [
-          {
-            company: '',
-            position: '',
-            startDate: '',
-            endDate: '',
-          },
-        ],
-      });
+    if (user && !formik.values.name && !formik.values.email) {
+      formik.setValues(getInitialValues(user));
     }
-  }, [formik, user]);
+  }, [user,formik]); 
 
   return (
     <Container maxWidth="md">
@@ -142,8 +127,6 @@ const ProfileForm = () => {
                 helperText={formik.touched.email && formik.errors.email}
               />
             </Grid>
-            {/* Add education fields here */}
-            {/* Add work experience fields here */}
             <Grid item xs={12}>
               <Button
                 type="submit"

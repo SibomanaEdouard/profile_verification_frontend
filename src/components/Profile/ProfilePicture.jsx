@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Container,
@@ -29,21 +29,21 @@ console.log(user)
   const [similarPictures, setSimilarPictures] = useState([]);
   const [currentPicture, setCurrentPicture] = useState(null);
 
-  useEffect(() => {
-    // Fetch current profile picture if exists
-    const fetchCurrentPicture = async () => {
-      try {
-        const response = await api.get('/api/profile/picture');
-        if (response.data.url) {
-          setCurrentPicture(response.data.url);
-        }
-      } catch (error) {
-        console.error('Error fetching profile picture:', error);
-      }
-    };
+  // useEffect(() => {
+  //   // Fetch current profile picture if exists
+  //   const fetchCurrentPicture = async () => {
+  //     try {
+  //       const response = await api.get('/profile/picture');
+  //       if (response.data.url) {
+  //         setCurrentPicture(response.data.url);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching profile picture:', error);
+  //     }
+  //   };
 
-    fetchCurrentPicture();
-  }, []);
+  //   fetchCurrentPicture();
+  // }, []);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -92,7 +92,11 @@ console.log(user)
     formData.append('profilePicture', file);
 
     try {
-      const response = await api.post('/api/verification/upload-picture', formData);
+      const response = await api.post('/verify/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
       // Check for similar images
       if (response.data.similarImages && response.data.similarImages.length > 0) {
@@ -118,7 +122,7 @@ console.log(user)
 
   const handleConfirmUpload = async () => {
     try {
-      const response = await api.post('/api/verification/confirm-picture', {
+      const response = await api.post('/verification/confirm-picture', {
         confirmUpload: true,
       });
       setMessage({ type: 'success', text: 'Profile picture confirmed and uploaded successfully' });

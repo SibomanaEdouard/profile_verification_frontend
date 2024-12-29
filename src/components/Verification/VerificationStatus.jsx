@@ -34,16 +34,17 @@ const VerificationStatus = () => {
 
   const fetchVerificationStatus = async () => {
     try {
-      const response = await api.get('/api/verification/status');
-      const { status, details } = response.data;
+      const response = await api.get('/verification/status');
+      // const { status, details } = response.data;
+      const { linkedInVerified, idVerified, pictureVerified, details } = response.data;
       
       setVerificationDetails(details);
       // Calculate active step based on verification progress
-      if (status.linkedInVerified && status.idVerified && status.pictureVerified) {
+      if (linkedInVerified && idVerified && pictureVerified) {
         setActiveStep(3);
-      } else if (status.linkedInVerified && status.idVerified) {
+      } else if (linkedInVerified && idVerified) {
         setActiveStep(2);
-      } else if (status.linkedInVerified) {
+      } else if (linkedInVerified) {
         setActiveStep(1);
       } else {
         setActiveStep(0);
@@ -97,11 +98,11 @@ const VerificationStatus = () => {
               <Typography variant="body1" paragraph>
                 Email: {verificationDetails.email}
               </Typography>
-              {verificationDetails.nationalId && (
-                <Typography variant="body1" paragraph>
-                  ID Number: {verificationDetails.nationalId.idNumber}
-                </Typography>
-              )}
+              {verificationDetails.nationalId?.verified && (
+          <Typography variant="body1" paragraph>
+        ID Status: Verified
+      </Typography>
+    )}
               <Typography variant="body1" color="text.secondary">
                 Last Updated: {new Date(verificationDetails.updatedAt).toLocaleDateString()}
               </Typography>

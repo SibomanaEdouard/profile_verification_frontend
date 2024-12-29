@@ -25,7 +25,6 @@ const CallbackHandler = () => {
                     return;
                 }
 
-                // Add error logging
                 console.log('Exchanging code:', code);
                 
                 const response = await api.post('/auth/exchange-code', { code });
@@ -38,14 +37,12 @@ const CallbackHandler = () => {
                 console.log('Login successful, token received');
                 await login(token, user);
                 
-                // Add a small delay before navigation
                 setTimeout(() => {
                     navigate('/profile', { replace: true });
                 }, 100);
                 
             } catch (error) {
                 console.error('Auth callback error:', error);
-                // Add more specific error handling
                 if (error.response?.status === 400) {
                     console.error('Invalid or expired code');
                 }

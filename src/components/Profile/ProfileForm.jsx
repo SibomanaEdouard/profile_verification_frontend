@@ -103,6 +103,7 @@ const ProfileForm = () => {
             {message.text}
           </Alert>
         )}
+        
         <form onSubmit={formik.handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12}>

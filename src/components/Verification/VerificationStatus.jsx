@@ -98,9 +98,9 @@ const VerificationStatus = () => {
               <Typography variant="body1" paragraph>
                 Email: {verificationDetails.email}
               </Typography>
-              {verificationDetails.nationalId?.verified && (
+              {verificationDetails.nationalId?.idNumber && (
           <Typography variant="body1" paragraph>
-        ID Status: Verified
+        ID Number: {verificationDetails.nationalId.idNumber}
       </Typography>
     )}
               <Typography variant="body1" color="text.secondary">

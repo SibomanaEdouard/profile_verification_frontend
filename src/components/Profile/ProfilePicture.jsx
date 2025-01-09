@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as faceDetection from '@tensorflow-models/face-detection';
 import {
   Button,
   Container,
@@ -18,6 +19,8 @@ import {
 import { Camera, Upload, AlertTriangle } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import * as mpFaceDetection from "@mediapipe/face_detection"
+
 
 const ProfilePicture = () => {
   const { user } = useAuth();
@@ -29,9 +32,32 @@ const ProfilePicture = () => {
   const [conflicts, setConflicts] = useState([]);
   const [currentPicture, setCurrentPicture] = useState(null);
   const [tempPath, setTempPath] = useState(null);
+  const [detector, setDetector] = useState(null);
 
- 
-console.log("The user details : ",user)
+  useEffect(() => {
+    const initializeDetector = async () => {
+      try {
+        const model = faceDetection.SupportedModels.MediaPipeFaceDetector;
+    
+        const faceDetector = await faceDetection.createDetector(model, {
+          modelType: "full",
+          solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@${mpFaceDetection.VERSION}`,
+          runtime: "mediapipe",
+          maxFaces: 1
+        });
+        setDetector(faceDetector);
+      } catch (error) {
+        console.error('Error initializing face detector:', error);
+        setMessage({
+          type: 'error',
+          text: 'Failed to initialize face detection. Please try again later.'
+        });
+      }
+    };
+
+    initializeDetector();
+  }, []);
+
   useEffect(() => {
     const fetchCurrentPicture = async () => {
       try {
@@ -46,6 +72,20 @@ console.log("The user details : ",user)
 
     fetchCurrentPicture();
   }, [user]);
+
+  const detectFace = async (imageElement) => {
+    if (!detector) {
+      throw new Error('Face detector not initialized');
+    }
+
+    try {
+      const faces = await detector.estimateFaces(imageElement);
+      return faces.length > 0;
+    } catch (error) {
+      console.error('Error detecting faces:', error);
+      throw new Error('Failed to detect faces in the image');
+    }
+  };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -90,10 +130,35 @@ console.log("The user details : ",user)
     }
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append('profilePicture', file);
 
     try {
+      // Create an image element for face detection
+      const img = new Image();
+      const imageUrl = URL.createObjectURL(file);
+      
+      // Wait for image to load
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imageUrl;
+      });
+
+      // Detect face in the image
+      const hasFace = await detectFace(img);
+      URL.revokeObjectURL(imageUrl);
+
+      if (!hasFace) {
+        setMessage({
+          type: 'error',
+          text: 'No  human face detected in the image . Please upload a clear photo with a visible human face.'
+        });
+        setLoading(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
       const response = await api.post('/verify/profile-picture', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -113,7 +178,7 @@ console.log("The user details : ",user)
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || 'Error uploading profile picture',
+        text: error.message || 'Error uploading profile picture',
       });
     } finally {
       setLoading(false);

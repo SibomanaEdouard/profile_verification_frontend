@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Menu as MenuIcon } from 'lucide-react';
+import Notification from '../Notification/Notification';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -40,6 +41,7 @@ const Layout = ({ children }) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
         <Toolbar>
+        <Notification/>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Mpuza Verification
           </Typography>
@@ -71,6 +73,7 @@ const Layout = ({ children }) => {
                 <MenuItem onClick={() => handleNavigation('/status')}>
                   Verification Status
                 </MenuItem>
+      
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </div>

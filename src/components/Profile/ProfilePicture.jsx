@@ -193,7 +193,7 @@ const ProfilePicture = () => {
         action: 'proceed'
       });
 
-      setMessage({ type: 'success', text: 'Profile picture confirmed and uploaded successfully' });
+      setMessage({ type: 'success', text: 'Profile picture confirmed and verified successfully' });
       setCurrentPicture(response.data.profilePicture.url);
       setSimilarityDialog(false);
       setFile(null);

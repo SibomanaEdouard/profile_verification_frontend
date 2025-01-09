@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import { 
   Badge,
@@ -9,7 +10,8 @@ import {
   Box,
   CircularProgress,
   Alert,
-  Popover
+  Popover,
+  Snackbar
 } from '@mui/material';
 import { Bell, X, Check, Image, RefreshCw } from 'lucide-react';
 import api from '../../services/api';
@@ -18,7 +20,13 @@ export default function Notification() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null); 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const fetchNotifications = async () => {
     try {
@@ -27,6 +35,7 @@ export default function Notification() {
       setNotifications(response.data.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      showSnackbar('Failed to fetch notifications', 'error');
     } finally {
       setLoading(false);
     }
@@ -51,29 +60,53 @@ export default function Notification() {
       await api.put('/notifications/mark-all-read');
       setUnreadCount(0);
       fetchNotifications();
+      showSnackbar('All notifications marked as read', 'success');
     } catch (error) {
       console.error('Error marking all as read:', error);
+      showSnackbar('Failed to mark notifications as read', 'error');
     }
   };
 
   const handleNotificationAction = async (notificationId, action) => {
     try {
-      await api.delete(`/notifications/${notificationId}`, {
-        data: { action }
+      setActionLoading(notificationId);
+      
+      const response = await api.post('/notifications/profile-picture-decision', {
+        notificationId,
+        action
       });
-      fetchNotifications();
-      fetchUnreadCount();
+
+      if (response.data.success) {
+        showSnackbar(`Profile picture successfully ${action}ed`, 'success');
+        // Remove the processed notification from the list
+        setNotifications(prev => prev.filter(n => n._id !== notificationId));
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } else {
+        showSnackbar(response.data.message || `Failed to ${action} profile picture`, 'error');
+      }
     } catch (error) {
       console.error('Error handling notification action:', error);
+      showSnackbar(`Failed to ${action} profile picture`, 'error');
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
   };
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const open = Boolean(anchorEl);
@@ -83,7 +116,7 @@ export default function Notification() {
     <div>
       <IconButton
         aria-describedby={id}
-        onClick={handleClick}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
         size="large"
         sx={{ position: 'relative' }}
       >
@@ -150,13 +183,13 @@ export default function Notification() {
                 {notifications.map((notification) => (
                   <Alert
                     key={notification._id}
-                    severity="info"
+                    severity={notification.type === 'PROFILE_PICTURE_SIMILARITY' ? 'warning' : 'info'}
                     sx={{
                       backgroundColor: notification.status === 'unread' ? 'action.hover' : 'background.paper'
                     }}
                     icon={<Image />}
                     action={
-                      notification.type === 'upload_conflict' && (
+                      notification.type === 'PROFILE_PICTURE_SIMILARITY' && !notification.resolved && (
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Button
                             size="small"
@@ -164,8 +197,9 @@ export default function Notification() {
                             color="primary"
                             startIcon={<Check />}
                             onClick={() => handleNotificationAction(notification._id, 'approve')}
+                            disabled={actionLoading === notification._id}
                           >
-                            Approve
+                            {actionLoading === notification._id ? 'Processing...' : 'Approve'}
                           </Button>
                           <Button
                             size="small"
@@ -173,19 +207,28 @@ export default function Notification() {
                             color="error"
                             startIcon={<X />}
                             onClick={() => handleNotificationAction(notification._id, 'reject')}
+                            disabled={actionLoading === notification._id}
                           >
-                            Reject
+                            {actionLoading === notification._id ? 'Processing...' : 'Reject'}
                           </Button>
                         </Box>
                       )
                     }
                   >
                     <Typography variant="subtitle2" component="div">
-                      Profile Picture Conflict
+                      {notification.type === 'PROFILE_PICTURE_SIMILARITY' ? 'Profile Picture Request' :
+                       notification.type === 'PROFILE_PICTURE_APPROVED' ? 'Profile Picture Approved' :
+                       notification.type === 'PROFILE_PICTURE_REJECTED' ? 'Profile Picture Rejected' :
+                       'Notification'}
                     </Typography>
                     <Typography variant="body2">
                       {notification.message}
                     </Typography>
+                    {notification.data?.similarity && (
+                      <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                        Similarity: {notification.data.similarity}%
+                      </Typography>
+                    )}
                   </Alert>
                 ))}
               </Box>
@@ -197,6 +240,18 @@ export default function Notification() {
           </CardContent>
         </Card>
       </Popover>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert severity={snackbar.severity} onClose={handleSnackbarClose}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

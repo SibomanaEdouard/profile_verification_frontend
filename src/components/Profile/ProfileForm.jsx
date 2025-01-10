@@ -61,6 +61,24 @@ const getInitialValues = (user) => ({
   })) || [],
 });
 
+// this is to format the birth day 
+const formatDateOfBirth = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
 // this is to deal with  the profile form
 const ProfileForm = () => {
   const { user } = useAuth();
@@ -227,6 +245,27 @@ return (
                 />
               </Grid>
             )}
+
+      {/* Date of birth Section - Only shown if available */}
+      {(userData?.nationalId?.dateOfBirth || user?.nationalId?.dateOfBirth) && (
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Date of Birth"
+            value={formatDateOfBirth(userData?.nationalId?.dateOfBirth || user?.nationalId?.dateOfBirth)}
+            InputProps={{
+              readOnly: true,
+            }}
+            disabled
+            sx={{
+              "& .MuiInputBase-input.Mui-disabled": {
+                WebkitTextFillColor: "#000000",
+                opacity: 0.8,
+              },
+            }}
+          />
+        </Grid>
+      )}
 
           {/* Education Section */}
           <Grid item xs={12}>

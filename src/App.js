@@ -8,6 +8,9 @@ import ProfilePicture from './components/Profile/ProfilePicture';
 import IDUpload from './components/Verification/IDUpload';
 import VerificationStatus from './components/Verification/VerificationStatus';
 import CallbackHandler from './components/CallbackHandler';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 function App() {
   return (

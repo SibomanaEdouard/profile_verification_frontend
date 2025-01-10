@@ -166,14 +166,14 @@ const ProfilePicture = () => {
       });
       
       if (!response.data.success && response.data.conflicts) {
+        console.log("The conflicts ",response.data.conflicts)
         setConflicts(response.data.conflicts);
         setTempPath(response.data.tempPath);
         setSimilarityDialog(true);
       } else {
-        setMessage({ type: 'success', text: 'Profile picture uploaded successfully' });
+        setMessage({ type: 'success', text: response.data.message });
         setCurrentPicture(response.data.profilePicture.url);
         setFile(null);
-        setPreview(null);
       }
     } catch (error) {
       setMessage({
@@ -193,11 +193,10 @@ const ProfilePicture = () => {
         action: 'proceed'
       });
 
-      setMessage({ type: 'success', text: 'Profile picture confirmed and verified successfully' });
+      setMessage({ type: 'success', text: response.data.message });
       setCurrentPicture(response.data.profilePicture.url);
       setSimilarityDialog(false);
       setFile(null);
-      setPreview(null);
       setTempPath(null);
     } catch (error) {
       setMessage({
@@ -333,7 +332,8 @@ const ProfilePicture = () => {
                     <CardMedia
                       component="img"
                       height="140"
-                      image={conflict.profilePicture}
+                      image={`${process.env.REACT_APP_API_URL}/${conflict.profilePicture}`}
+
                       alt={`Similar picture ${index + 1}`}
                     />
                     <Box sx={{ p: 1 }}>

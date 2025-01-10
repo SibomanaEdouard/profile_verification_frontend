@@ -207,6 +207,26 @@ return (
               />
             )}
           </Grid>
+            {/* National ID Section - Only shown if available */}
+            {(userData?.nationalId?.idNumber || user?.nationalId?.idNumber) && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="National ID"
+                  value={userData?.nationalId?.idNumber || user?.nationalId?.idNumber}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  disabled
+                  sx={{
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: "#000000",
+                      opacity: 0.8,
+                    },
+                  }}
+                />
+              </Grid>
+            )}
 
           {/* Education Section */}
           <Grid item xs={12}>

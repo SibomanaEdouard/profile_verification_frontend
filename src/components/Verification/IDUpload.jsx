@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Button,
-  Container,
-  Typography,
-  Box,
-  Alert,
+import { 
+  Button, 
+  Container, 
+  Typography, 
+  Box, 
+  Alert, 
   CircularProgress,
 } from '@mui/material';
 import { Upload } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
 import api from '../../services/api';
+
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const IDUpload = () => {
   const [file, setFile] = useState(null);
@@ -27,7 +31,39 @@ const IDUpload = () => {
     return () => clearTimeout(timer);
   }, [message, navigate]);
 
-  const handleFileChange = (event) => {
+  // Function to convert PDF to image
+  const convertPDFToImage = async (pdfFile) => {
+    try {
+      const arrayBuffer = await pdfFile.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1); 
+
+      const scale = 2; 
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise;
+
+      // Convert canvas to blob
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(new File([blob], 'converted-page.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.95);
+      });
+    } catch (error) {
+      console.error('PDF conversion error:', error);
+      throw new Error('Failed to convert PDF to image');
+    }
+  };
+
+  const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       if (selectedFile.size > 5 * 1024 * 1024) {
@@ -35,8 +71,24 @@ const IDUpload = () => {
         event.target.value = '';
         return;
       }
-      setFile(selectedFile);
-      setMessage(null);
+
+      try {
+        let fileToUpload = selectedFile;
+        
+        // Convert PDF to image if necessary
+        if (selectedFile.type === 'application/pdf') {
+          setLoading(true);
+          fileToUpload = await convertPDFToImage(selectedFile);
+          setLoading(false);
+        }
+
+        setFile(fileToUpload);
+        setMessage(null);
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Error processing file' });
+        event.target.value = '';
+        setLoading(false);
+      }
     }
   };
 
@@ -48,8 +100,8 @@ const IDUpload = () => {
 
     const formData = new FormData();
     formData.append('nationalId', file);
-
     setLoading(true);
+
     try {
       const { data } = await api.post('/verify/national-id', formData, {
         headers: {
@@ -57,8 +109,8 @@ const IDUpload = () => {
         },
       });
 
-      setMessage({ 
-        type: data.success ? 'success' : 'error', 
+      setMessage({
+        type: data.success ? 'success' : 'error',
         text: data.message || 'ID verified successfully!'
       });
 
@@ -69,7 +121,7 @@ const IDUpload = () => {
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || 'Error uploading ID',
+        text: error.response?.data?.error || 'Error uploading ID'
       });
     } finally {
       setLoading(false);
@@ -90,15 +142,17 @@ const IDUpload = () => {
         <Typography variant="h4" component="h1">
           Upload National ID
         </Typography>
+
         {message && (
-          <Alert 
-            severity={message.type} 
+          <Alert
+            severity={message.type}
             sx={{ width: '100%' }}
             onClose={() => setMessage(null)}
           >
             {message.text}
           </Alert>
         )}
+
         <input
           accept="image/jpeg,image/png,application/pdf"
           style={{ display: 'none' }}
@@ -106,20 +160,24 @@ const IDUpload = () => {
           type="file"
           onChange={handleFileChange}
         />
+
         <label htmlFor="id-upload">
           <Button
             variant="outlined"
             component="span"
             startIcon={<Upload />}
+            disabled={loading}
           >
             Select ID File
           </Button>
         </label>
+
         {file && (
           <Typography variant="body2" color="textSecondary">
             Selected: {file.name}
           </Typography>
         )}
+
         <Button
           variant="contained"
           onClick={handleUpload}

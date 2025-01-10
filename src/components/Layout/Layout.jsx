@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AppBar,
   Box,
@@ -13,11 +13,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Menu as MenuIcon } from 'lucide-react';
 import Notification from '../Notification/Notification';
+import AccountSettingsModal from '../settings/AccountSetting';
 
 const Layout = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -32,16 +34,13 @@ const Layout = ({ children }) => {
     handleClose();
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
         <Toolbar>
-        <Notification/>
+          <Notification/>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Mpuza Verification
           </Typography>
@@ -73,8 +72,12 @@ const Layout = ({ children }) => {
                 <MenuItem onClick={() => handleNavigation('/status')}>
                   Verification Status
                 </MenuItem>
-      
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                <MenuItem onClick={() => {
+                  handleClose();
+                  setSettingsOpen(true);
+                }}>
+                  Settings
+                </MenuItem>
               </Menu>
             </div>
           )}
@@ -84,6 +87,11 @@ const Layout = ({ children }) => {
       <Container component="main" sx={{ flexGrow: 1, py: 3 }}>
         {children}
       </Container>
+
+      <AccountSettingsModal 
+        open={isSettingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       <Box component="footer" sx={{ py: 3, px: 2, mt: 'auto', backgroundColor: 'background.paper' }}>
         <Container maxWidth="sm">
